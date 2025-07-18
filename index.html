@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCycle - Marketplace Daur Ulang</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --secondary-color: #4CAF50;
+            --accent-color: #81C784;
+            --light-color: #E8F5E9;
+            --dark-color: #1B5E20;
+            --text-color: #263238;
+            --text-light: #546E7A;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --plastic-color: #2196F3;
+            --paper-color: #FFC107;
+            --metal-color: #9E9E9E;
+            --glass-color: #4CAF50;
+            --ewaste-color: #795548;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0 15px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+            color: var(--white);
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 20px 0 80px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .map-container {
+            height: 300px;
+            width: 100%;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+        }
+
+        .btn:hover {
+            background: var(--dark-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: #C8E6C9;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dfe1e5;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px var(--light-color);
+        }
+
+        .type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .type-option {
+            flex: 1 0 calc(50% - 10px);
+            max-width: calc(50% - 10px);
+        }
+
+        .type-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--light-color);
+            border-radius: var(--border-radius);
+            background: var(--white);
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .type-btn:hover, .type-btn.active {
+            border-color: var(--primary-color);
+            background: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .product-card.highlight {
+            border-color: var(--primary-color);
+            position: relative;
+        }
+
+        .product-card.highlight::after {
+            content: "TERSEDIA";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .product-content {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .product-price {
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .product-distance {
+            display: flex;
+            align-items: center;
+        }
+
+        .product-distance i {
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+
+        .product-weight {
+            display: flex;
+            align-items: center;
+        }
+
+        .product-weight i {
+            margin-right: 5px;
+            color: var(--text-light);
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .action-btn i {
+            margin-right: 5px;
+        }
+
+        .action-pickup {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-pickup:hover {
+            background: var(--dark-color);
+        }
+
+        .action-whatsapp {
+            background: #25D366;
+            color: white;
+        }
+
+        .action-whatsapp:hover {
+            background: #128C7E;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-light);
+            font-size: 12px;
+            background: var(--light-color);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .close {
+            color: var(--text-light);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: var(--text-color);
+        }
+
+        .material-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .plastic {
+            background-color: var(--plastic-color);
+        }
+
+        .paper {
+            background-color: var(--paper-color);
+        }
+
+        .metal {
+            background-color: var(--metal-color);
+        }
+
+        .glass {
+            background-color: var(--glass-color);
+        }
+
+        .ewaste {
+            background-color: var(--ewaste-color);
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 750px;
+                margin: 0 auto;
+            }
+
+            .product-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .product-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">EcoCycle</div>
+            <div class="tagline">Marketplace Daur Ulang Sampah - Ubah Sampah Menjadi Berkah</div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-map-marker-alt"></i> Lokasi Anda
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+                <button id="locate-btn" class="btn btn-block">
+                    <i class="fas fa-location-arrow"></i> Gunakan Lokasi Saya
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-filter"></i> Filter Sampah Daur Ulang
+                </div>
+                
+                <div class="type-selector">
+                    <div class="type-option">
+                        <button class="type-btn active" data-type="all">
+                            <i class="fas fa-list"></i> Semua
+                        </button>
+                    </div>
+                    <div class="type-option">
+                        <button class="type-btn" data-type="jual">
+                            <i class="fas fa-tag"></i> Dijual
+                        </button>
+                    </div>
+                    <div class="type-option">
+                        <button class="type-btn" data-type="beli">
+                            <i class="fas fa-shopping-cart"></i> Dicari
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Jenis Material:</label>
+                    <select id="category">
+                        <option value="">Semua Jenis</option>
+                        <option value="plastik">Plastik</option>
+                        <option value="kertas">Kertas</option>
+                        <option value="logam">Logam</option>
+                        <option value="kaca">Kaca</option>
+                        <option value="elektronik">Elektronik</option>
+                        <option value="organik">Organik</option>
+                        <option value="lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <button id="filter-btn" class="btn btn-block">
+                    <i class="fas fa-search"></i> Cari Material
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-recycle"></i> Daftar Material Daur Ulang
+                </div>
+                <div id="products-list" class="product-list">
+                    <!-- Products will be loaded here -->
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Detail Material</h3>
+            <div id="modal-product-content">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            EcoCycle Marketplace © 2023 - Daur Ulang untuk Masa Depan yang Lebih Baik
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Google Sheets configuration (without API key)
+        const SHEET_ID = '1FzcrwbZFx6X-IKJGbYa1bBn4EkrxszsE_rqKfIbbZk0';
+        const SHEET_NAME = 'Sheet3';
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+
+        // Initialize map
+        let map;
+        let userMarker;
+        let userLocation = null;
+        let materialData = [];
+        let materialMarkers = [];
+
+        // DOM elements
+        const locateBtn = document.getElementById('locate-btn');
+        const filterBtn = document.getElementById('filter-btn');
+        const typeBtns = document.querySelectorAll('.type-btn');
+        const categorySelect = document.getElementById('category');
+        const productsList = document.getElementById('products-list');
+        const productModal = document.getElementById('productModal');
+        const closeModal = document.querySelector('.close');
+        const modalProductContent = document.getElementById('modal-product-content');
+
+        // Initialize the application
+        function init() {
+            initMap();
+            setupEventListeners();
+            loadMaterialData();
+        }
+
+        // Initialize Leaflet map
+        function initMap() {
+            map = L.map('map').setView([-7.7545, 113.2159], 13); // Default to Probolinggo coordinates
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            locateBtn.addEventListener('click', locateUser);
+            filterBtn.addEventListener('click', filterMaterial);
+            
+            typeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    typeBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            closeModal.addEventListener('click', () => {
+                productModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === productModal) {
+                    productModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Get user location
+        function locateUser() {
+            locateBtn.disabled = true;
+            locateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi Lokasi...';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        userLocation = { lat: latitude, lng: longitude };
+                        
+                        // Update map view
+                        map.setView([latitude, longitude], 15);
+                        
+                        // Add or update user marker
+                        if (userMarker) {
+                            userMarker.setLatLng([latitude, longitude]);
+                        } else {
+                            userMarker = L.marker([latitude, longitude], {
+                                icon: L.divIcon({
+                                    className: 'user-marker',
+                                    html: '<i class="fas fa-user" style="color: #4CAF50; font-size: 24px;"></i>',
+                                    iconSize: [24, 24]
+                                })
+                            }).addTo(map);
+                        }
+                        
+                        locateBtn.innerHTML = '<i class="fas fa-check-circle"></i> Lokasi Ditemukan';
+                        setTimeout(() => {
+                            locateBtn.disabled = false;
+                            locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Gunakan Lokasi Saya';
+                        }, 2000);
+                    },
+                    error => {
+                        console.error('Error getting location:', error);
+                        alert('Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi telah diberikan.');
+                        locateBtn.disabled = false;
+                        locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Gunakan Lokasi Saya';
+                    }
+                );
+            } else {
+                alert('Browser Anda tidak mendukung geolokasi.');
+                locateBtn.disabled = false;
+                locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i> Gunakan Lokasi Saya';
+            }
+        }
+
+        // Load material data from Google Sheets as CSV
+        async function loadMaterialData() {
+            try {
+                const response = await fetch(CSV_URL);
+                const csvData = await response.text();
+                const rows = parseCSV(csvData);
+                
+                if (rows.length > 1) {
+                    // Skip header row
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row.length >= 10) { // Pastikan ada minimal 10 kolom
+                            const isAvailable = row[5] === 'tersedia';
+                            
+                            materialData.push({
+                                id: row[0] || Date.now().toString(),
+                                name: row[1] || 'Material Tanpa Nama',
+                                description: row[2] || 'Tidak ada deskripsi',
+                                image: row[3] || getDefaultMaterialImage(row[4]),
+                                category: row[4] || 'lainnya',
+                                status: isAvailable ? 'tersedia' : 'dicari',
+                                price: parseInt(row[6]) || 0,
+                                type: row[7] === 'beli' ? 'beli' : 'jual',
+                                weight: parseFloat(row[8]) || 0,
+                                lat: parseFloat(row[9]) || 0,
+                                lng: parseFloat(row[10]) || 0,
+                                whatsapp: row[11] || '',
+                                isAvailable: isAvailable
+                            });
+                        }
+                    }
+                    
+                    // Display all materials initially
+                    displayMaterialList(materialData);
+                    addMaterialMarkers(materialData);
+                }
+            } catch (error) {
+                console.error('Error loading material data:', error);
+                // Fallback data in case API fails
+                loadFallbackMaterialData();
+            }
+        }
+
+        // Get default material image based on category
+        function getDefaultMaterialImage(category) {
+            const images = {
+                'plastik': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'kertas': 'https://images.unsplash.com/photo-1603484477859-abe6a73f9366?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'logam': 'https://images.unsplash.com/photo-1611095973763-4145ff7a5a97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'kaca': 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'elektronik': 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'organik': 'https://images.unsplash.com/photo-1605001011156-cbf0b0f67a51?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+                'lainnya': 'https://images.unsplash.com/photo-1584978591503-4624397d6f94?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+            };
+            return images[category] || images['lainnya'];
+        }
+
+        // Simple CSV parser
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            return lines.map(line => {
+                // Handle quoted values with commas
+                const result = [];
+                let inQuotes = false;
+                let currentField = '';
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(currentField);
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+                result.push(currentField);
+                return result;
+            });
+        }
+
+        // Fallback material data if API fails
+        function loadFallbackMaterialData() {
+            materialData = [
+                {
+                    id: "1",
+                    name: "Botol Plastik PET",
+                    description: "Botol plastik bekas minuman kemasan, sudah dicuci bersih",
+                    image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    category: "plastik",
+                    status: "tersedia",
+                    price: 5000,
+                    type: "jual",
+                    weight: 10,
+                    lat: -7.7568,
+                    lng: 113.2113,
+                    whatsapp: "628123456789",
+                    isAvailable: true
+                },
+                {
+                    id: "2",
+                    name: "Kardus Bekas",
+                    description: "Kardus bekas packing, ukuran bervariasi, kondisi kering",
+                    image: "https://images.unsplash.com/photo-1603484477859-abe6a73f9366?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    category: "kertas",
+                    status: "tersedia",
+                    price: 3000,
+                    type: "jual",
+                    weight: 15,
+                    lat: -7.7582,
+                    lng: 113.2187,
+                    whatsapp: "628987654321",
+                    isAvailable: true
+                },
+                {
+                    id: "3",
+                    name: "Besi Tua",
+                    description: "Mencari besi tua bekas konstruksi atau peralatan rumah tangga",
+                    image: "https://images.unsplash.com/photo-1611095973763-4145ff7a5a97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    category: "logam",
+                    status: "dicari",
+                    price: 10000,
+                    type: "beli",
+                    weight: 0,
+                    lat: -7.7521,
+                    lng: 113.2150,
+                    whatsapp: "6281122334455",
+                    isAvailable: false
+                },
+                {
+                    id: "4",
+                    name: "Kaca Bekas Jendela",
+                    description: "Kaca bekas jendela rumah, ukuran bervariasi, kondisi baik",
+                    image: "https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    category: "kaca",
+                    status: "tersedia",
+                    price: 8000,
+                    type: "jual",
+                    weight: 5,
+                    lat: -7.7535,
+                    lng: 113.2125,
+                    whatsapp: "6282233445566",
+                    isAvailable: true
+                },
+                {
+                    id: "5",
+                    name: "Limbah Elektronik",
+                    description: "Menerima limbah elektronik bekas (TV, radio, komputer) untuk didaur ulang",
+                    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    category: "elektronik",
+                    status: "dicari",
+                    price: 15000,
+                    type: "beli",
+                    weight: 0,
+                    lat: -7.7570,
+                    lng: 113.2140,
+                    whatsapp: "6283344556677",
+                    isAvailable: false
+                }
+            ];
+            
+            // Display all materials initially
+            displayMaterialList(materialData);
+            addMaterialMarkers(materialData);
+        }
+
+        // Filter material based on type and category
+        function filterMaterial() {
+            if (!userLocation) {
+                alert('Silakan aktifkan lokasi Anda terlebih dahulu.');
+                return;
+            }
+            
+            const activeTypeBtn = document.querySelector('.type-btn.active');
+            const type = activeTypeBtn.dataset.type;
+            const category = categorySelect.value;
+            
+            filterBtn.disabled = true;
+            filterBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+            
+            let filteredMaterial = materialData;
+            
+            // Filter by type
+            if (type !== 'all') {
+                filteredMaterial = filteredMaterial.filter(material => material.type === type);
+            }
+            
+            // Filter by category if selected
+            if (category) {
+                filteredMaterial = filteredMaterial.filter(material => material.category === category);
+            }
+            
+            // Calculate distance for each material item
+            filteredMaterial.forEach(material => {
+                material.distance = calculateDistance(
+                    userLocation.lat, userLocation.lng, 
+                    material.lat, material.lng
+                );
+            });
+            
+            // Sort by distance (nearest first)
+            filteredMaterial.sort((a, b) => a.distance - b.distance);
+            
+            // Display results
+            displayMaterialList(filteredMaterial);
+            addMaterialMarkers(filteredMaterial);
+            
+            filterBtn.disabled = false;
+            filterBtn.innerHTML = '<i class="fas fa-search"></i> Cari Material';
+        }
+
+        // Display material list
+        function displayMaterialList(materials) {
+            productsList.innerHTML = '';
+            
+            if (materials.length === 0) {
+                productsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Tidak ada material yang sesuai dengan filter Anda.</p>';
+                return;
+            }
+            
+            materials.forEach(material => {
+                const materialCard = document.createElement('div');
+                materialCard.className = `product-card ${material.isAvailable ? 'highlight' : ''}`;
+                
+                // Get category color class
+                const categoryClass = getCategoryClass(material.category);
+                
+                materialCard.innerHTML = `
+                    <img src="${material.image}" alt="${material.name}" class="product-image">
+                    <div class="product-content">
+                        <h3 class="product-title">${material.name}</h3>
+                        <div class="product-price">
+                            ${material.type === 'beli' ? 'DICARI' : `Rp${material.price.toLocaleString('id-ID')}/${material.weight > 0 ? 'kg' : 'lot'}`}
+                        </div>
+                        <div class="product-meta">
+                            <div class="product-distance">
+                                <i class="fas fa-map-marker-alt"></i> ${Math.round(material.distance * 1000)} m
+                            </div>
+                            <div class="product-weight">
+                                <i class="fas fa-weight-hanging"></i> 
+                                ${material.weight > 0 ? material.weight + ' kg' : 'Jumlah bervariasi'}
+                            </div>
+                        </div>
+                        <span class="material-tag ${categoryClass}">${getCategoryName(material.category)}</span>
+                        <div class="product-actions">
+                            <button class="action-btn action-pickup" data-id="${material.id}">
+                                <i class="fas fa-info-circle"></i> Detail
+                            </button>
+                            <button class="action-btn action-whatsapp" data-id="${material.id}">
+                                <i class="fab fa-whatsapp"></i> Hubungi
+                            </button>
+                        </div>
+                    </div>
+                `;
+                productsList.appendChild(materialCard);
+                
+                // Add event listeners to buttons
+                materialCard.querySelectorAll('.action-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const materialId = this.getAttribute('data-id');
+                        const materialItem = materialData.find(m => m.id === materialId);
+                        
+                        if (this.classList.contains('action-pickup')) {
+                            showProductModal(materialItem);
+                        } else if (this.classList.contains('action-whatsapp')) {
+                            window.open(`https://wa.me/${materialItem.whatsapp}`, '_blank');
+                        }
+                    });
+                });
+            });
+        }
+
+        // Get category CSS class
+        function getCategoryClass(category) {
+            const classes = {
+                'plastik': 'plastic',
+                'kertas': 'paper',
+                'logam': 'metal',
+                'kaca': 'glass',
+                'elektronik': 'ewaste',
+                'organik': 'glass',
+                'lainnya': 'metal'
+            };
+            return classes[category] || 'metal';
+        }
+
+        // Get category display name
+        function getCategoryName(category) {
+            const names = {
+                'plastik': 'Plastik',
+                'kertas': 'Kertas',
+                'logam': 'Logam',
+                'kaca': 'Kaca',
+                'elektronik': 'E-Waste',
+                'organik': 'Organik',
+                'lainnya': 'Lainnya'
+            };
+            return names[category] || 'Lainnya';
+        }
+
+        // Add material markers to map
+        function addMaterialMarkers(materials) {
+            // Clear existing material markers
+            materialMarkers.forEach(marker => map.removeLayer(marker));
+            materialMarkers = [];
+            
+            materials.forEach(material => {
+                if (material.lat && material.lng) {
+                    const markerColor = getMarkerColor(material.category);
+                    const markerIcon = material.type === 'beli' ? 'shopping-cart' : 'recycle';
+                    
+                    const marker = L.marker([material.lat, material.lng], {
+                        icon: L.divIcon({
+                            className: 'material-marker',
+                            html: `<i class="fas fa-${markerIcon}" 
+                                   style="color: ${markerColor}; 
+                                   font-size: 20px;"></i>`,
+                            iconSize: [20, 20]
+                        })
+                    }).addTo(map);
+                    
+                    marker.bindPopup(`
+                        <div style="max-width: 200px;">
+                            <h4 style="margin: 0 0 5px 0; color: var(--primary-color);">${material.name}</h4>
+                            <p style="margin: 0 0 5px 0; font-size: 12px;">
+                                <strong>Status:</strong> ${material.type === 'beli' ? 'Dicari' : 'Dijual Rp' + material.price.toLocaleString('id-ID')}/${material.weight > 0 ? 'kg' : 'lot'}
+                            </p>
+                            <p style="margin: 0 0 5px 0; font-size: 12px;">
+                                <strong>Jenis:</strong> ${getCategoryName(material.category)}
+                            </p>
+                            <div style="display: flex; gap: 5px; margin-top: 10px;">
+                                <a href="https://wa.me/${material.whatsapp}" target="_blank" 
+                                   style="background: #25D366; color: white; padding: 5px 10px; 
+                                   border-radius: 5px; text-decoration: none; font-size: 12px;">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${material.lat},${material.lng}" 
+                                   target="_blank" style="background: #4285F4; color: white; 
+                                   padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 12px;">
+                                    <i class="fas fa-directions"></i> Rute
+                                </a>
+                            </div>
+                        </div>
+                    `);
+                    
+                    materialMarkers.push(marker);
+                }
+            });
+            
+            // Adjust map view to show all markers if there are any
+            if (materials.length > 0 && materials.some(m => m.lat && m.lng)) {
+                const markerGroup = new L.featureGroup(
+                    materials.filter(m => m.lat && m.lng).map(m => L.marker([m.lat, m.lng]))
+                );
+                map.fitBounds(markerGroup.getBounds());
+            }
+        }
+
+        // Get marker color based on category
+        function getMarkerColor(category) {
+            const colors = {
+                'plastik': 'var(--plastic-color)',
+                'kertas': 'var(--paper-color)',
+                'logam': 'var(--metal-color)',
+                'kaca': 'var(--glass-color)',
+                'elektronik': 'var(--ewaste-color)',
+                'organik': 'var(--glass-color)',
+                'lainnya': 'var(--metal-color)'
+            };
+            return colors[category] || 'var(--metal-color)';
+        }
+
+        // Show product modal
+        function showProductModal(material) {
+            const categoryClass = getCategoryClass(material.category);
+            const categoryName = getCategoryName(material.category);
+            
+            modalProductContent.innerHTML = `
+                <img src="${material.image}" alt="${material.name}" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:15px;">
+                <h4 style="margin-bottom:10px;">${material.name}</h4>
+                <p style="margin-bottom:10px;">${material.description}</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="background: var(--light-color); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-light);">Status</div>
+                        <div style="font-weight: 600; color: ${material.type === 'beli' ? 'var(--plastic-color)' : 'var(--dark-color)'}">
+                            ${material.type === 'beli' ? 'DICARI' : 'DIJUAL'}
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--light-color); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-light);">Harga</div>
+                        <div style="font-weight: 600; color: var(--dark-color);">
+                            ${material.type === 'beli' ? 'Harga nego' : `Rp${material.price.toLocaleString('id-ID')}/${material.weight > 0 ? 'kg' : 'lot'}`}
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--light-color); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-light);">Jarak</div>
+                        <div style="font-weight: 600; color: var(--dark-color);">
+                            ${Math.round(material.distance * 1000)} meter
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--light-color); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-light);">Berat/Jumlah</div>
+                        <div style="font-weight: 600; color: var(--dark-color);">
+                            ${material.weight > 0 ? material.weight + ' kg' : 'Jumlah bervariasi'}
+                        </div>
+                    </div>
+                </div>
+                
+                <span class="material-tag ${categoryClass}" style="margin-bottom: 15px; display: inline-block;">${categoryName}</span>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <a href="https://wa.me/${material.whatsapp}" target="_blank" 
+                       class="btn" style="flex: 1; text-align: center;">
+                        <i class="fab fa-whatsapp"></i> Hubungi ${material.type === 'beli' ? 'Pembeli' : 'Penjual'}
+                    </a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${material.lat},${material.lng}" 
+                       target="_blank" class="btn" style="flex: 1; text-align: center;">
+                        <i class="fas fa-directions"></i> Lihat Rute
+                    </a>
+                </div>
+            `;
+            
+            productModal.style.display = 'block';
+        }
+
+        // Calculate distance between two coordinates in km
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = deg2rad(lat2 - lat1);
+            const dLon = deg2rad(lon2 - lon1);
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Distance in km
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI/180);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
